@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 q.py
-Artur Matias, 16242
+Artur Matias
 2021-06-28
 
 mfsvenom generator
@@ -12,7 +12,7 @@ import random
 
 def banner():
     print("#------------------------------------------------------------------------------#") 
-    print("|        16242 - Artur Matias                                2021-08-01        |")
+    print("|        Artur Matias                                        2021-08-01        |")
     print("#------------------------------------------------------------------------------#")
 
 def create_folder():
