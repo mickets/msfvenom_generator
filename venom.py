@@ -211,7 +211,7 @@ if __name__ == "__main__":
     print("lhost: " + lhost)
     print("lport: " + lport)
     print("format: " + f)
-    print("encoders: " + [print(x for x in encoders)])
+    print("executable: ", executable)
 
 
     run(n_files)
