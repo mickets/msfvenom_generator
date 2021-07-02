@@ -211,6 +211,7 @@ if __name__ == "__main__":
     print("lhost: " + lhost)
     print("lport: " + lport)
     print("format: " + f)
+    print("encoders: ", encoders)
     print("executable: ", executable)
 
 
