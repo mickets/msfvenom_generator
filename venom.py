@@ -10,6 +10,7 @@ mfsvenom generator
 import glob
 import os
 import random
+from time import sleep
 
 def banner():
 
@@ -102,7 +103,7 @@ def get_arch():
     elif answer == '2':
         arch = 'x64'
     else:
-        print("Invalid option!\n")
+        print("[-] Invalid option!\n")
         arch = 'x86'
         get_arch()
 
@@ -151,29 +152,27 @@ def get_executable(arch):
 
 def choose_executable(executable):
 
+    print_executables(executable)
     print("\n" + "#"*80 + "\n")
-    print("Do you want to generate a copy of a single or all executables?")
-    print("1 - Single executable")
-    print("2 - All executables")
+    print("Select an executable by number or insert '-1' to select all executables.")
     answer = input('\n> ')
-    
-    if answer == '1':
-        print_executables(executable)
-        print("\n" + "#"*80 + "\n")
-        print("Choose the executable by number:")
-        choice = input('\n> ')
-        choice = int(choice)
-        if choice >= 0 and choice <= len(executable):
-            executable = [executable[choice]]
+    try:
+        answer = int(answer)
+
+        if answer == -1:
+            pass
+
+        elif answer >= 0 and answer <= len(executable):
+            executable = [executable[answer]]
+
         else:
-            print("Invalid option!\n")
+            print("[-] Invalid option!\n")
             choose_executable(executable)
-        
-    elif answer == '2':
-        pass
-    else:
-        print("Invalid option!\n")
+
+    except ValueError:
+        print("[-] Invalid option!\n")
         choose_executable(executable)
+
 
     return executable
 
@@ -213,7 +212,7 @@ def get_n_files():
         n_files = int(answer)
 
     except ValueError:
-        print("Invalid option!\n")
+        print("[-] Invalid option!\n")
         get_n_files()
     
     return n_files
@@ -237,7 +236,137 @@ def print_executables(executable):
     print("List of executables:\n")
 
     for index,exe in enumerate(executable):
-        print(str(index) + " - " + exe + ".exe")
+        print("\t" + str(index) + " - " + exe + ".exe")
+
+
+def get_vt_key():
+    vt_key = '135da9ae550ee54f8cf38ff2faeb2639b8845a9ebffa030e0234435407a15c93'
+    
+    return vt_key
+
+
+def vt_upload(vt_key, generated_executable):
+    vt_file = "vt_file.tmp"
+    vt_id_file = "vt_id_file.tmp"
+
+    # TODO don't hardcode the exe
+    for n_exe in range(len(generated_executable)):
+        vt = "./vt-scan.sh -k " + vt_key + " -f ./generated/" + generated_executable[n_exe] + ".exe"
+
+        vt_up = vt + " > " + vt_file
+
+        #jq_id = 'grep -Po \'\"id\": *\\K\"[^\"]*\"\' ' + vt_file
+        jq_id = "jq -r \'.data.id\' " + vt_file + " > " + vt_id_file
+
+        print("[*] Uploading \"" +  generated_executable[n_exe] + ".exe\" to VirusTotal.")
+        try:
+            os.system(vt_up)
+            print("[+] Uploaded!")
+        except:
+            print("[-] Failed to upload.")
+        
+        os.system(jq_id)
+
+        with open(vt_id_file, 'r') as file:
+            vt_id = file.read().replace('\n', '')
+
+        vt_check_status(vt_key, vt_id)
+
+    rm_tmp_files()
+
+
+def rm_tmp_files():
+    os.system("rm *.tmp")
+
+
+def vt_check_status(vt_key, vt_id):
+
+    vt_result_file = "vt_result_file.tmp"
+    vt_status_file = "vt_status_file.tmp"
+    vt_stats_mal_file = "vt_stats_mal_file.tmp"
+    vt_stats_und_file = "vt_stats_und_file.tmp"
+
+    vt_result = "./vt-scan.sh -k " + vt_key + " -a " + vt_id + " > " + vt_result_file
+    os.system(vt_result)
+
+    vt_chck_status = "jq -r \'.data.attributes.status\' " + vt_result_file + " > " + vt_status_file
+    os.system(vt_chck_status)
+
+    with open(vt_status_file, 'r') as file:
+        vt_status = file.read().replace('\n', '')
+
+    if vt_status == "queued":
+        print("[*] Scan in queue, updating in 30 seconds.")
+        sleep(30)
+        vt_check_status(vt_key, vt_id)
+
+    elif vt_status == "completed":
+        print("[+] Scan completed!")
+        #vt_chck_stats = "jq -r \'.data.attributes.stats\' " + vt_result_file
+        vt_chck_stats_mal = "jq -r \'.data.attributes.stats.malicious\' " + vt_result_file + " > " + vt_stats_mal_file
+        vt_chck_stats_und = "jq -r \'.data.attributes.stats.undetected\' " + vt_result_file + " > " + vt_stats_und_file
+        #os.system(vt_chck_stats)
+        os.system(vt_chck_stats_mal)
+        os.system(vt_chck_stats_und)
+
+        with open(vt_stats_mal_file, 'r') as file:
+            vt_stats_mal = file.read().replace('\n', '')
+
+        with open(vt_stats_und_file, 'r') as file:
+            vt_stats_und = file.read().replace('\n', '')
+
+        vt_stats_total = int(vt_stats_mal) + int(vt_stats_und)
+
+        result = vt_stats_mal + "/" + str(vt_stats_total)
+        print("[+] Scan result: " + result)
+
+    else:
+        print("Failed to check status.")
+
+
+def get_generated_executable():
+
+    generated_executable = [os.path.basename(a) for a in glob.glob('generated/*.exe')]
+    for index,exe in enumerate(generated_executable):
+        new = os.path.splitext(exe)[0]
+        generated_executable[index] = new
+
+    if not generated_executable:
+        print("No executable files found!")
+
+    return generated_executable
+
+
+def choose_generated_executable(executable):
+
+    print_executables(executable)
+    print("\n" + "#"*80 + "\n")
+    print("Select an executable by number:")
+    #print("Select an executable by number or insert '-1' to select all executables.")
+    #print("[DISABLED] *Note: Selecting all executables will take 2 minutes per 4 files.")
+    answer = input('\n> ')
+    try:
+        answer = int(answer)
+
+        if answer == -1:
+            # TODO upload all generated exes
+            print("[*] This actually does nothing for now...")
+            pass
+
+        elif answer >= 0 and answer <= len(executable):
+            executable = [executable[answer]]
+
+        else:
+            print("[-] Invalid option!\n")
+            choose_generated_executable(executable)
+
+    except ValueError:
+        print("[-] Invalid option!\n")
+        choose_generated_executable(executable)
+
+
+    return executable
+
 
 
 if __name__ == "__main__":
@@ -252,12 +381,13 @@ if __name__ == "__main__":
     executable = get_executable(arch)
     encoders = get_encoders()
     f = get_format()
+    vt_key = get_vt_key()
 
     # Max random raw sequences
-    max_r_raw = 1
+    max_r_raw = 2
 
     # Max random iterations per raw
-    max_r_iterations = 20
+    max_r_iterations = 500
 
     executable = choose_executable(executable)
     n_files = get_n_files()
@@ -269,8 +399,17 @@ if __name__ == "__main__":
     print("Execute? [y/n]")
     start = input('\n> ')
     
-    if start == "y" or start == "Y":
+    if start == "y" or start == "Y" or start == "1":
+        # Generate files
         run(n_files)
+
+        # Get generated files into a list
+        generated_executable = get_generated_executable()
+
+        # Ask which genereated files should be scanned by VirusTotal
+        generated_executable = choose_generated_executable(generated_executable)
+
+        vt_upload(vt_key, generated_executable)
     else:
         print("Bye!")
         quit()
