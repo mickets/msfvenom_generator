@@ -321,7 +321,7 @@ def vt_check_status(vt_key, vt_id):
         print("[+] Scan result: " + result)
 
     else:
-        print("Failed to check status.")
+        print("[-] Failed to check status.")
 
 
 def get_generated_executable():
@@ -332,7 +332,7 @@ def get_generated_executable():
         generated_executable[index] = new
 
     if not generated_executable:
-        print("No executable files found!")
+        print("[-] No executable files found.")
 
     return generated_executable
 
@@ -341,7 +341,7 @@ def choose_generated_executable(executable):
 
     print_executables(executable)
     print("\n" + "#"*80 + "\n")
-    print("Select an executable by number:")
+    print("Select an executable by number to scan in VirusTotal:")
     #print("Select an executable by number or insert '-1' to select all executables.")
     #print("[DISABLED] *Note: Selecting all executables will take 2 minutes per 4 files.")
     answer = input('\n> ')
@@ -402,6 +402,16 @@ if __name__ == "__main__":
     if start == "y" or start == "Y" or start == "1":
         # Generate files
         run(n_files)
+    else:
+        print("Not executing...")
+
+
+
+    print("\n" + "#"*80 + "\n")
+    print("Scan generated files on VirusTotal? [y/n]")
+    start_vt = input('\n> ')
+
+    while start_vt == "y" or start_vt == "Y" or start_vt == "1":
 
         # Get generated files into a list
         generated_executable = get_generated_executable()
@@ -410,6 +420,12 @@ if __name__ == "__main__":
         generated_executable = choose_generated_executable(generated_executable)
 
         vt_upload(vt_key, generated_executable)
-    else:
-        print("Bye!")
-        quit()
+
+        print("\n" + "#"*80 + "\n")
+        print("Scan another file? [y/n]")
+        start_vt = input('\n> ')
+
+
+
+    print("Bye!")
+    quit()
