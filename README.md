@@ -1,19 +1,25 @@
 # Instruções - msfvenom_generator
 
 ### Clonar o repositório
+```bash
 git clone https://github.com/mickets/msfvenom_generator
+```
 
 ### Mover para o repositório
+```bash
 cd msfvenom_generator
+```
 
 ### Criar pastas "generated", "x64" e "x86"
+```bash
 mkdir generated
 mkdir x64
 mkdir x86
+```
 
 ### Inserir os executáveis originais nas respetivas pastas "x86" ou "x64"
 
-### Para correr o programa, correr o script com "./venom.py" ou "python3 venom.py"
+### Para correr o programa, correr o script com "`./venom.py`" ou "`python3 venom.py`"
 
 
 ## Notas:
