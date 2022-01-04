@@ -24,7 +24,7 @@ mkdir x86
 
 ## Notas:
 - Para alterar o lhost, alterar o script venom.py na função "get_lhost()", linha 129 (por defeito tem o IP que estava a utilizar em testes)
-- Pode-se alterar o nº de sequências raw e o nº de iterações por raw, linhas 389 e 392
+- Pode-se alterar o nº de sequências raw e o nº de iterações por raw, linhas 387 e 390
 - Cada scan do virustotal leva por volta de 3-4 minutos
 - Terminal deve ter no mínimo 80 de largura
 
